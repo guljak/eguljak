@@ -1141,11 +1141,11 @@ footer { background:#080808; color:rgba(255,255,255,.3); padding:2rem 1.5rem; te
 
     <form class="apply-form" id="inquiryForm">
       <div class="row">
-        <div class="field"><label>이름</label><input type="text" placeholder="성함을 입력해주세요" required></div>
-        <div class="field"><label>연락처</label><input type="tel" placeholder="010-0000-0000" required></div>
+        <div class="field"><label>이름</label><input type="text" name="name" placeholder="성함을 입력해주세요" required></div>
+        <div class="field"><label>연락처</label><input type="tel" name="phone" placeholder="010-0000-0000" required></div>
       </div>
-      <div class="field"><label>매장 위치 (매장 상호명까지 기입)</label><input type="text" placeholder="예) OO시 OO동 걸작김치찜" required></div>
-      <div class="field"><label>현재 운영 중인 업종</label><input type="text" placeholder="예) 고깃집, 편의점, 호프집 등" required></div>
+      <div class="field"><label>매장 위치 (매장 상호명까지 기입)</label><input type="text" name="location" placeholder="예) OO시 OO동 걸작김치찜" required></div>
+      <div class="field"><label>현재 운영 중인 업종</label><input type="text" name="business" placeholder="예) 고깃집, 편의점, 호프집 등" required></div>
       <div class="field">
         <label>샘플팩 받아보기</label>
         <div class="sample-toggle">
@@ -1153,7 +1153,7 @@ footer { background:#080808; color:rgba(255,255,255,.3); padding:2rem 1.5rem; te
           <label class="toggle-option"><input type="radio" name="samplepack" value="받지않기">받지않기</label>
         </div>
       </div>
-      <div class="field"><label>문의 내용 (선택)</label><textarea placeholder="궁금하신 내용을 자유롭게 남겨주세요"></textarea></div>
+      <div class="field"><label>문의 내용 (선택)</label><textarea name="message" placeholder="궁금하신 내용을 자유롭게 남겨주세요"></textarea></div>
       <div class="agree-row">
         <label class="agree"><input type="checkbox" required style="width:auto;">개인정보 수집 및 이용에 동의합니다</label>
         <span class="privacy-info">자세히 보기
@@ -1348,7 +1348,41 @@ revealEls.forEach(el => observer.observe(el));
 
 const form = document.getElementById('inquiryForm');
 const modal = document.getElementById('modalOverlay');
-form.addEventListener('submit', function(e){ e.preventDefault(); modal.classList.add('show'); });
+const WEBHOOK_URL = 'https://hook.eu1.make.com/wl7f3wbp5ai45hus6aimwj49vk5jgxvd';
+
+form.addEventListener('submit', async function(e){
+  e.preventDefault();
+
+  const data = {
+    이름: form.querySelector('[name="name"]').value,
+    연락처: form.querySelector('[name="phone"]').value,
+    매장위치: form.querySelector('[name="location"]').value,
+    업종: form.querySelector('[name="business"]').value,
+    샘플팩: form.querySelector('[name="samplepack"]:checked').value,
+    문의내용: form.querySelector('[name="message"]').value,
+    접수일시: new Date().toISOString()
+  };
+
+  const submitBtn = form.querySelector('.submit-btn');
+  const originalLabel = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = '전송 중...';
+
+  try {
+    await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    modal.classList.add('show');
+    form.reset();
+  } catch (err) {
+    alert('전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalLabel;
+  }
+});
 document.getElementById('modalClose').addEventListener('click', () => modal.classList.remove('show'));
 </script>
 
